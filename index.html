@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urban Realtors | Architecture of Living</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- GSAP & Plugins -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Flip.min.js"></script>
+    <script src="https://unpkg.com/split-type"></script>
+    
+    <!-- Lenis (Smooth Scroll) -->
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        urban: {
+                            black: '#0a0a0a',
+                            charcoal: '#1C1C1C',
+                            gold: '#C5A059',
+                            alabaster: '#F0F0EA',
+                            border: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Manrope', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    fontSize: {
+                        'huge': '10rem',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #F0F0EA;
+            color: #0a0a0a;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        /* --- Custom Cursor CSS --- */
+        body { cursor: none; } /* Hide default cursor */
+        
+        .custom-cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: difference;
+        }
+
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+            /* Center the dot */
+            transform: translate(-50%, -50%);
+        }
+
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            /* Center the outline */
+            transform: translate(-50%, -50%);
+            /* Transition for size changes (hover) */
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+
+        /* Hide cursor on touch devices to prevent UI issues */
+        @media (hover: none) and (pointer: coarse) {
+            .custom-cursor { display: none; }
+            body { cursor: auto; }
+        }
+
+        /* Typography Utilities */
+        .text-reveal-line {
+            overflow: hidden;
+            display: block;
+        }
+        .text-reveal-line span {
+            display: block;
+            transform: translateY(100%);
+        }
+
+        /* Image Reveal Utilities */
+        .reveal-img-container {
+            overflow: hidden;
+            position: relative;
+        }
+        .reveal-img {
+            transform: scale(1.3);
+            will-change: transform;
+        }
+
+        /* Grid Lines */
+        .grid-line-y {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background-color: rgba(0,0,0,0.08);
+            z-index: 0;
+        }
+        .grid-line-x {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: rgba(0,0,0,0.08);
+            z-index: 0;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #F0F0EA; }
+        ::-webkit-scrollbar-thumb { background: #C5A059; }
+
+        /* Smooth Scroll Wrapper */
+        .lenis.lenis-smooth { scroll-behavior: auto; }
+        .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+        .lenis.lenis-stopped { overflow: hidden; }
+        .lenis.lenis-scrolling iframe { pointer-events: none; }
+    </style>
+</head>
+<body class="antialiased selection:bg-urban-gold selection:text-white">
+
+    <!-- Custom Cursor DOM Elements -->
+    <div class="custom-cursor cursor-dot"></div>
+    <div class="custom-cursor cursor-outline"></div>
+
+    <!-- Grid Background System -->
+    <div class="fixed inset-0 pointer-events-none z-0 w-full h-full max-w-[1920px] mx-auto">
+        <div class="grid-line-y left-6 md:left-20"></div>
+        <div class="grid-line-y right-6 md:right-20"></div>
+        <div class="grid-line-y left-1/2 transform -translate-x-1/2 hidden md:block"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 py-6 px-6 md:px-20 mix-blend-difference text-white flex justify-between items-center">
+        <a href="#" class="font-serif text-2xl font-bold tracking-tight z-50 hoverable">URBAN.</a>
+        
+        <div class="hidden md:flex items-center space-x-12">
+            <a href="#about" class="text-xs uppercase tracking-[0.2em] hover:text-urban-gold transition-colors hoverable">Studio</a>
+            <a href="#collections" class="text-xs uppercase tracking-[0.2em] hover:text-urban-gold transition-colors hoverable">Work</a>
+            <a href="#contact" class="text-xs uppercase tracking-[0.2em] hover:text-urban-gold transition-colors hoverable">Contact</a>
+        </div>
+        
+        <button class="md:hidden text-xl z-50 hoverable"><i class="fas fa-bars"></i></button>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="relative w-full h-screen overflow-hidden flex flex-col justify-between pt-32 pb-12 px-6 md:px-20 border-b border-urban-black/10">
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071&auto=format&fit=crop" 
+                 class="w-full h-full object-cover opacity-90 reveal-img" 
+                 data-speed="0.5"
+                 alt="Hero Architecture">
+            <div class="absolute inset-0 bg-black/20"></div>
+        </div>
+
+        <div class="relative z-10 mix-blend-difference text-white">
+            <h2 class="text-xs font-bold uppercase tracking-[0.4em] mb-4 reveal-text">Kerala, India</h2>
+            <h1 class="font-serif text-[15vw] leading-[0.8] tracking-tighter reveal-text mt-4">
+                Urban <br> <span class="ml-[20vw] italic font-light block text-urban-gold">Realtors</span>
+            </h1>
+        </div>
+
+        <div class="relative z-10 flex justify-between items-end mix-blend-difference text-white">
+            <p class="max-w-md text-sm md:text-base leading-relaxed opacity-80 reveal-text">
+                Pioneers in urban transformation. Weaving dreams into the very fabric of the city through sustainable, modern, and culturally rich living spaces.
+            </p>
+            <div class="hidden md:block animate-spin-slow">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                    <path id="circlePath" d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0" fill="transparent" />
+                    <text font-size="12" fill="white" letter-spacing="2">
+                        <textPath href="#circlePath">SCROLL DOWN TO EXPLORE •</textPath>
+                    </text>
+                </svg>
+            </div>
+        </div>
+    </header>
+
+    <!-- About / Introduction -->
+    <section id="about" class="py-32 px-6 md:px-20 relative bg-urban-alabaster z-10">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-12">
+            <div class="md:col-span-4">
+                <span class="block w-full h-[1px] bg-urban-black mb-6 scale-x-0 origin-left anim-line"></span>
+                <span class="text-xs font-bold uppercase tracking-[0.2em] text-urban-charcoal">Who We Are</span>
+            </div>
+            <div class="md:col-span-8">
+                <h3 class="font-serif text-4xl md:text-6xl leading-tight mb-12 text-urban-black split-reveal">
+                    We believe every square foot of urban space holds the potential for greatness.
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 text-urban-charcoal/80 leading-relaxed text-sm md:text-base">
+                    <p>We envision a future where the urban landscape of Kerala becomes a testament to sustainable, modern, and culturally rich living. We are dedicated to weaving the dreams of our clients into the very fabric of the city.</p>
+                    <p>Trust is at the core of our identity. Our legacy is one of not just closing a deal but also nurturing relationships that last a lifetime. Homes are not just spaces but places where memories are made.</p>
+                </div>
+                
+                <div class="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-urban-black/10 pt-12">
+                    <div>
+                        <div class="text-4xl font-serif mb-2">15+</div>
+                        <div class="text-xs uppercase tracking-widest opacity-60">Years</div>
+                    </div>
+                    <div>
+                        <div class="text-4xl font-serif mb-2">100+</div>
+                        <div class="text-xs uppercase tracking-widest opacity-60">Projects</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Parallax Image Break -->
+    <section class="w-full h-[80vh] overflow-hidden relative">
+        <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop" 
+             class="w-full h-[120%] object-cover absolute top-0 left-0 reveal-img hoverable" 
+             data-speed="0.2" alt="Architecture Detail">
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <h2 class="text-white font-serif text-6xl md:text-8xl mix-blend-overlay">Visionary</h2>
+        </div>
+    </section>
+
+    <!-- Why Kerala (Sticky Editorial List) -->
+    <section id="whykerala" class="bg-urban-black text-urban-alabaster relative">
+        <div class="flex flex-col lg:flex-row">
+            <!-- Left Sticky Title -->
+            <div class="lg:w-1/3 p-6 md:p-20 lg:h-screen lg:sticky lg:top-0 flex flex-col justify-between border-r border-white/10">
+                <div>
+                    <span class="text-urban-gold text-xs font-bold uppercase tracking-[0.2em] mb-4 block">Location Focus</span>
+                    <h2 class="font-serif text-5xl md:text-6xl leading-none">Why <br> <span class="italic text-urban-gold">Kerala?</span></h2>
+                </div>
+                <div class="hidden lg:block">
+                    <div class="text-sm opacity-50 max-w-xs">
+                        From lush landscapes to rapid urbanization, discover the investment potential of God's Own Country.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Scrollable List -->
+            <div class="lg:w-2/3">
+                <!-- Item 1 -->
+                <div class="group border-b border-white/10 min-h-[50vh] p-6 md:p-20 flex flex-col justify-center transition-colors hover:bg-white/5 hoverable">
+                    <div class="flex items-baseline justify-between mb-6">
+                        <h3 class="font-serif text-3xl md:text-4xl">National Highway Widening</h3>
+                        <span class="text-urban-gold font-serif text-xl">01</span>
+                    </div>
+                    <p class="text-white/60 max-w-md leading-relaxed mb-8 h-0 overflow-hidden group-hover:h-auto transition-all duration-500">
+                        Enhanced connectivity increases desirability. As commuting becomes effortless, urban property values are poised for significant appreciation.
+                    </p>
+                    <div class="reveal-img-container h-64 w-full opacity-60 group-hover:opacity-100 transition-all duration-700">
+                        <img src="https://images.unsplash.com/photo-1565514020176-8575a60e0a58?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover reveal-img" alt="National Highway Kerala">
+                    </div>
+                </div>
+
+                <!-- Item 2 -->
+                <div class="group border-b border-white/10 min-h-[50vh] p-6 md:p-20 flex flex-col justify-center transition-colors hover:bg-white/5 hoverable">
+                    <div class="flex items-baseline justify-between mb-6">
+                        <h3 class="font-serif text-3xl md:text-4xl">Kochi Metro Expansion</h3>
+                        <span class="text-urban-gold font-serif text-xl">02</span>
+                    </div>
+                    <p class="text-white/60 max-w-md leading-relaxed mb-8 h-0 overflow-hidden group-hover:h-auto transition-all duration-500">
+                        Properties near metro stations are prime targets. The ease of transit transforms neighborhoods into accessible, high-value hubs.
+                    </p>
+                    <div class="reveal-img-container h-64 w-full opacity-60 group-hover:opacity-100 transition-all duration-700">
+                        <!-- Updated Image for Kochi Metro -->
+                        <img src="https://images.unsplash.com/photo-1589487391730-58f20eb2c308?q=80&w=2074&auto=format&fit=crop" class="w-full h-full object-cover reveal-img" alt="Kochi Metro Station">
+                    </div>
+                </div>
+
+                <!-- Item 3 -->
+                <div class="group border-b border-white/10 min-h-[50vh] p-6 md:p-20 flex flex-col justify-center transition-colors hover:bg-white/5 hoverable">
+                    <div class="flex items-baseline justify-between mb-6">
+                        <h3 class="font-serif text-3xl md:text-4xl">Infopark & Technopark</h3>
+                        <span class="text-urban-gold font-serif text-xl">03</span>
+                    </div>
+                    <p class="text-white/60 max-w-md leading-relaxed mb-8 h-0 overflow-hidden group-hover:h-auto transition-all duration-500">
+                        Major IT hubs generate high employment, driving consistent demand for premium housing from a skilled, global workforce.
+                    </p>
+                    <div class="reveal-img-container h-64 w-full opacity-60 group-hover:opacity-100 transition-all duration-700">
+                        <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop" class="w-full h-full object-cover reveal-img" alt="IT Park">
+                    </div>
+                </div>
+
+                <!-- Item 4: Vizhinjam Port -->
+                <div class="group border-b border-white/10 min-h-[50vh] p-6 md:p-20 flex flex-col justify-center transition-colors hover:bg-white/5 hoverable">
+                    <div class="flex items-baseline justify-between mb-6">
+                        <h3 class="font-serif text-3xl md:text-4xl">Vizhinjam Port</h3>
+                        <span class="text-urban-gold font-serif text-xl">04</span>
+                    </div>
+                    <p class="text-white/60 max-w-md leading-relaxed mb-8 h-0 overflow-hidden group-hover:h-auto transition-all duration-500">
+                        A major logistics gateway stimulating massive economic growth. This project serves as a catalyst for regional real estate demand.
+                    </p>
+                    <div class="reveal-img-container h-64 w-full opacity-60 group-hover:opacity-100 transition-all duration-700">
+                        <img src="https://images.unsplash.com/photo-1628148902568-7c8592d3f443?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover reveal-img" alt="Vizhinjam Port">
+                    </div>
+                </div>
+
+                <!-- Item 5: Shopping Mall Culture -->
+                <div class="group border-b border-white/10 min-h-[50vh] p-6 md:p-20 flex flex-col justify-center transition-colors hover:bg-white/5 hoverable">
+                    <div class="flex items-baseline justify-between mb-6">
+                        <h3 class="font-serif text-3xl md:text-4xl">Shopping Mall Culture</h3>
+                        <span class="text-urban-gold font-serif text-xl">05</span>
+                    </div>
+                    <p class="text-white/60 max-w-md leading-relaxed mb-8 h-0 overflow-hidden group-hover:h-auto transition-all duration-500">
+                        Malls are becoming central hubs for dining and entertainment. Properties in their vicinity gain value as real estate investors eye these commercial hotspots.
+                    </p>
+                    <div class="reveal-img-container h-64 w-full opacity-60 group-hover:opacity-100 transition-all duration-700">
+                        <img src="https://images.unsplash.com/photo-1519567241046-7f570eee3d9f?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover reveal-img" alt="Shopping Mall">
+                    </div>
+                </div>
+
+                <!-- Item 6: Educational Institutions -->
+                <div class="group border-b border-white/10 min-h-[50vh] p-6 md:p-20 flex flex-col justify-center transition-colors hover:bg-white/5 hoverable">
+                    <div class="flex items-baseline justify-between mb-6">
+                        <h3 class="font-serif text-3xl md:text-4xl">Educational Excellence</h3>
+                        <span class="text-urban-gold font-serif text-xl">06</span>
+                    </div>
+                    <p class="text-white/60 max-w-md leading-relaxed mb-8 h-0 overflow-hidden group-hover:h-auto transition-all duration-500">
+                        Kerala boasts renowned institutions attracting students and professionals nationwide, creating consistent demand for student housing and rentals.
+                    </p>
+                    <div class="reveal-img-container h-64 w-full opacity-60 group-hover:opacity-100 transition-all duration-700">
+                        <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover reveal-img" alt="University">
+                    </div>
+                </div>
+
+                <!-- Item 7: Water Metro -->
+                <div class="group border-b border-white/10 min-h-[50vh] p-6 md:p-20 flex flex-col justify-center transition-colors hover:bg-white/5 hoverable">
+                    <div class="flex items-baseline justify-between mb-6">
+                        <h3 class="font-serif text-3xl md:text-4xl">India's First Water Metro</h3>
+                        <span class="text-urban-gold font-serif text-xl">07</span>
+                    </div>
+                    <p class="text-white/60 max-w-md leading-relaxed mb-8 h-0 overflow-hidden group-hover:h-auto transition-all duration-500">
+                        Revolutionizing urban transport by connecting islands. Waterfront properties along these routes are becoming highly desirable assets.
+                    </p>
+                    <div class="reveal-img-container h-64 w-full opacity-60 group-hover:opacity-100 transition-all duration-700">
+                        <img src="https://images.unsplash.com/photo-1544644181-1484b3fdfc62?q=80&w=2088&auto=format&fit=crop" class="w-full h-full object-cover reveal-img" alt="Water Metro">
+                    </div>
+                </div>
+
+                <!-- Item 8: Tourism -->
+                <div class="group border-b border-white/10 min-h-[50vh] p-6 md:p-20 flex flex-col justify-center transition-colors hover:bg-white/5 hoverable">
+                    <div class="flex items-baseline justify-between mb-6">
+                        <h3 class="font-serif text-3xl md:text-4xl">Tourism & Hospitality</h3>
+                        <span class="text-urban-gold font-serif text-xl">08</span>
+                    </div>
+                    <p class="text-white/60 max-w-md leading-relaxed mb-8 h-0 overflow-hidden group-hover:h-auto transition-all duration-500">
+                        A thriving tourism industry fuels demand for hotels and vacation homes, catering to the growing number of visitors to God's Own Country.
+                    </p>
+                    <div class="reveal-img-container h-64 w-full opacity-60 group-hover:opacity-100 transition-all duration-700">
+                        <img src="https://images.unsplash.com/photo-1593693396885-5a5c9f1950d2?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover reveal-img" alt="Kerala Tourism">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Section (Horizontal Scroll "The Journey") -->
+    <section id="process" class="bg-urban-alabaster relative overflow-hidden h-screen">
+        <div class="absolute top-10 left-6 md:left-20 z-20">
+            <span class="text-xs font-bold uppercase tracking-[0.2em] text-urban-black">The Process</span>
+        </div>
+        
+        <div id="process-wrapper" class="flex h-full w-[400%]">
+            
+            <!-- Step 1 -->
+            <div class="w-screen h-full flex flex-col md:flex-row items-center justify-center border-r border-urban-black/10 px-6 md:px-20 relative">
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[20vw] font-serif text-urban-black/5 pointer-events-none">01</div>
+                <div class="md:w-1/2 mb-10 md:mb-0">
+                     <div class="reveal-img-container w-full max-w-md aspect-square hoverable">
+                        <img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=2032&auto=format&fit=crop" class="w-full h-full object-cover reveal-img" alt="Meeting">
+                    </div>
+                </div>
+                <div class="md:w-1/2 md:pl-20">
+                    <h3 class="font-serif text-4xl md:text-6xl mb-6">Consultation</h3>
+                    <p class="text-urban-charcoal/70 max-w-md leading-relaxed">
+                        We begin by understanding your specific needs, budget, and vision. Your dream is our blueprint.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="w-screen h-full flex flex-col md:flex-row items-center justify-center border-r border-urban-black/10 px-6 md:px-20 relative">
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[20vw] font-serif text-urban-black/5 pointer-events-none">02</div>
+                <div class="md:w-1/2 mb-10 md:mb-0">
+                     <div class="reveal-img-container w-full max-w-md aspect-square hoverable">
+                        <img src="https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover reveal-img" alt="Site Visit">
+                    </div>
+                </div>
+                <div class="md:w-1/2 md:pl-20">
+                    <h3 class="font-serif text-4xl md:text-6xl mb-6">Site Experience</h3>
+                    <p class="text-urban-charcoal/70 max-w-md leading-relaxed">
+                        Walk through our premium properties. Visualize your future life unfolding in real-time.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="w-screen h-full flex flex-col md:flex-row items-center justify-center border-r border-urban-black/10 px-6 md:px-20 relative">
+                 <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[20vw] font-serif text-urban-black/5 pointer-events-none">03</div>
+                <div class="md:w-1/2 mb-10 md:mb-0">
+                     <div class="reveal-img-container w-full max-w-md aspect-square hoverable">
+                        <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover reveal-img" alt="Contract">
+                    </div>
+                </div>
+                <div class="md:w-1/2 md:pl-20">
+                    <h3 class="font-serif text-4xl md:text-6xl mb-6">Acquisition</h3>
+                    <p class="text-urban-charcoal/70 max-w-md leading-relaxed">
+                        Transparent, seamless documentation. We handle the complexities so you can focus on the celebration.
+                    </p>
+                </div>
+            </div>
+             <!-- Step 4 -->
+            <div class="w-screen h-full flex flex-col md:flex-row items-center justify-center border-r border-urban-black/10 px-6 md:px-20 relative">
+                 <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[20vw] font-serif text-urban-black/5 pointer-events-none">04</div>
+                <div class="md:w-1/2 mb-10 md:mb-0">
+                     <div class="reveal-img-container w-full max-w-md aspect-square hoverable">
+                        <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1973&auto=format&fit=crop" class="w-full h-full object-cover reveal-img" alt="Keys">
+                    </div>
+                </div>
+                <div class="md:w-1/2 md:pl-20">
+                    <h3 class="font-serif text-4xl md:text-6xl mb-6">Handover</h3>
+                    <p class="text-urban-charcoal/70 max-w-md leading-relaxed">
+                        The moment of truth. Welcome to your new beginning.
+                    </p>
+                </div>
+            </div>
+            
+        </div>
+    </section>
+
+    <!-- Collections (Stacked Cards Effect) -->
+    <div id="collections" class="bg-urban-black pt-32 pb-20">
+        <div class="px-6 md:px-20 mb-20 text-white">
+            <span class="text-urban-gold text-xs font-bold uppercase tracking-[0.2em] mb-4 block">Portfolio</span>
+            <h2 class="font-serif text-5xl md:text-7xl">Signature Collections</h2>
+        </div>
+
+        <div class="relative w-full max-w-7xl mx-auto px-6">
+            
+            <!-- Card 1 -->
+            <div class="sticky top-20 h-[80vh] w-full bg-white text-urban-black p-8 md:p-16 flex flex-col md:flex-row gap-12 border border-white/10 shadow-2xl origin-top rounded-t-xl overflow-hidden hoverable">
+                <div class="md:w-1/2 flex flex-col justify-between relative z-10">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-urban-black/40">01</span>
+                        <h3 class="font-serif text-5xl mt-4 mb-8">The Sky Collection</h3>
+                        <p class="text-lg text-urban-charcoal/70 leading-relaxed max-w-md">
+                            Elevated living for those who aspire for the extraordinary. High-rise apartments with breathtaking panoramic views of Kerala's lush horizon.
+                        </p>
+                    </div>
+                    <button class="w-max mt-8 border-b border-urban-black pb-1 uppercase text-xs tracking-widest hover:text-urban-gold transition-colors hoverable">View Residences</button>
+                </div>
+                <div class="md:w-1/2 h-full absolute right-0 top-0 w-1/2 hidden md:block">
+                    <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" alt="Sky">
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="sticky top-28 h-[80vh] w-full bg-[#E5E5E0] text-urban-black p-8 md:p-16 flex flex-col md:flex-row gap-12 border-t border-white/50 shadow-2xl origin-top rounded-t-xl overflow-hidden hoverable">
+                 <div class="md:w-1/2 flex flex-col justify-between relative z-10">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-urban-black/40">02</span>
+                        <h3 class="font-serif text-5xl mt-4 mb-8">Heritage Edition</h3>
+                        <p class="text-lg text-urban-charcoal/70 leading-relaxed max-w-md">
+                            Timeless architecture paying homage to Kerala's rich tradition, blended seamlessly with modern luxury amenities.
+                        </p>
+                    </div>
+                    <button class="w-max mt-8 border-b border-urban-black pb-1 uppercase text-xs tracking-widest hover:text-urban-gold transition-colors hoverable">View Villas</button>
+                </div>
+                 <div class="md:w-1/2 h-full absolute right-0 top-0 w-1/2 hidden md:block">
+                    <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" alt="Heritage">
+                </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="sticky top-36 h-[80vh] w-full bg-urban-gold text-white p-8 md:p-16 flex flex-col md:flex-row gap-12 border-t border-white/20 shadow-2xl origin-top rounded-t-xl overflow-hidden hoverable">
+                 <div class="md:w-1/2 flex flex-col justify-between relative z-10">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-white/40">03</span>
+                        <h3 class="font-serif text-5xl mt-4 mb-8">Eco-Living</h3>
+                        <p class="text-lg text-white/80 leading-relaxed max-w-md">
+                            Sustainable homes nestled in nature. Featuring solar power, rainwater harvesting, and organic community gardens.
+                        </p>
+                    </div>
+                    <button class="w-max mt-8 border-b border-white pb-1 uppercase text-xs tracking-widest hover:text-urban-black transition-colors hoverable">Explore Green</button>
+                </div>
+                 <div class="md:w-1/2 h-full absolute right-0 top-0 w-1/2 hidden md:block">
+                    <img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=1854&auto=format&fit=crop" class="w-full h-full object-cover mix-blend-multiply" alt="Eco">
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="bg-urban-alabaster pt-32 pb-12 px-6 md:px-20 border-t border-urban-black/10">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-20 mb-32">
+            <div>
+                <h2 class="font-serif text-6xl md:text-8xl leading-[0.9] mb-8">Let's build <br> the future.</h2>
+                <a href="mailto:hello@urbanrealtors.com" class="text-xl border-b border-urban-black pb-1 hover:text-urban-gold hover:border-urban-gold transition-colors hoverable">hello@urbanrealtors.com</a>
+            </div>
+            
+            <div class="flex flex-col justify-end">
+                <form class="space-y-8 max-w-md">
+                    <div class="group relative">
+                        <input type="text" placeholder="Name" class="w-full bg-transparent border-b border-urban-black/20 py-4 focus:outline-none focus:border-urban-black transition-colors hoverable">
+                    </div>
+                    <div class="group relative">
+                        <input type="email" placeholder="Email" class="w-full bg-transparent border-b border-urban-black/20 py-4 focus:outline-none focus:border-urban-black transition-colors hoverable">
+                    </div>
+                    <button type="submit" class="bg-urban-black text-white px-8 py-4 uppercase text-xs tracking-[0.2em] hover:bg-urban-gold transition-colors w-full md:w-auto hoverable">
+                        Submit Inquiry
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row justify-between items-end border-t border-urban-black/10 pt-8">
+            <div class="font-serif text-xl font-bold">URBAN.</div>
+            <div class="flex space-x-8 text-xs uppercase tracking-widest opacity-60 mt-6 md:mt-0">
+                <a href="#" class="hoverable">Instagram</a>
+                <a href="#" class="hoverable">LinkedIn</a>
+                <a href="#" class="hoverable">Facebook</a>
+            </div>
+            <div class="text-xs opacity-40 mt-6 md:mt-0 flex flex-col md:items-end gap-1">
+                <span>&copy; 2026 Urban Realtors.</span>
+                <span class="tracking-widest">ANIMATED WITH <span class="font-bold hover:text-urban-gold transition-colors duration-300">GSAP</span></span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- CUSTOM CURSOR LOGIC ---
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+
+        // Initially center the cursor elements off-screen or at center
+        gsap.set([cursorDot, cursorOutline], {xPercent: -50, yPercent: -50, opacity: 0});
+
+        // Create quickTo setters for performance
+        let xTo = gsap.quickTo(cursorOutline, "x", {duration: 0.2, ease: "power3"}),
+            yTo = gsap.quickTo(cursorOutline, "y", {duration: 0.2, ease: "power3"});
+
+        // Track Mouse Movement
+        window.addEventListener("mousemove", e => {
+            // Fade in on first move
+            gsap.to([cursorDot, cursorOutline], {opacity: 1, duration: 0.3});
+            
+            // Dot follows instantly
+            gsap.to(cursorDot, {duration: 0, x: e.clientX, y: e.clientY});
+            
+            // Outline follows with lag/smoothness
+            xTo(e.clientX);
+            yTo(e.clientY);
+        });
+
+        // Hide cursor when leaving the window
+        document.addEventListener("mouseleave", () => {
+             gsap.to([cursorDot, cursorOutline], {opacity: 0, duration: 0.3});
+        });
+
+        document.addEventListener("mouseenter", () => {
+             gsap.to([cursorDot, cursorOutline], {opacity: 1, duration: 0.3});
+        });
+
+        // Click Interaction (Shrink)
+        document.addEventListener("mousedown", () => {
+            gsap.to(cursorOutline, {scale: 0.8, duration: 0.1});
+            gsap.to(cursorDot, {scale: 0.8, duration: 0.1});
+        });
+
+        document.addEventListener("mouseup", () => {
+            gsap.to(cursorOutline, {scale: 1, duration: 0.2});
+            gsap.to(cursorDot, {scale: 1, duration: 0.2});
+        });
+
+        // Hover Effects (Scale Up)
+        // We select all links, buttons, inputs, and anything with class 'hoverable'
+        const hoverables = document.querySelectorAll('.hoverable, a, button, input, .group');
+        
+        hoverables.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                gsap.to(cursorOutline, {width: 60, height: 60, backgroundColor: "rgba(255,255,255,0.1)", duration: 0.3});
+                gsap.to(cursorDot, {width: 12, height: 12, duration: 0.3});
+            });
+            el.addEventListener('mouseleave', () => {
+                gsap.to(cursorOutline, {width: 40, height: 40, backgroundColor: "transparent", duration: 0.3});
+                gsap.to(cursorDot, {width: 8, height: 8, duration: 0.3});
+            });
+        });
+
+
+        // --- EXISTING ANIMATIONS ---
+
+        // 1. Initialize Lenis (Smooth Scroll)
+        const lenis = new Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            orientation: 'vertical',
+            gestureDirection: 'vertical',
+            smoothWheel: true,
+        });
+
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // Connect GSAP ScrollTrigger to Lenis
+        gsap.registerPlugin(ScrollTrigger);
+        
+        // 2. Text Reveals
+        const splitTypes = document.querySelectorAll('.reveal-text');
+        splitTypes.forEach((char,i) => {
+            gsap.from(char, {
+                y: 50,
+                opacity: 0,
+                duration: 1.5,
+                ease: "power4.out",
+                delay: 0.2 + (i * 0.1)
+            });
+        });
+
+        const sectionTitles = document.querySelectorAll('.split-reveal');
+        sectionTitles.forEach(title => {
+            gsap.from(title, {
+                scrollTrigger: {
+                    trigger: title,
+                    start: "top 80%",
+                },
+                y: 50,
+                opacity: 0,
+                duration: 1,
+                ease: "power3.out"
+            });
+        });
+
+        // 3. Line Animations
+        gsap.utils.toArray('.anim-line').forEach(line => {
+            gsap.to(line, {
+                scaleX: 1,
+                duration: 1.5,
+                ease: "power3.out",
+                scrollTrigger: {
+                    trigger: line,
+                    start: "top 85%"
+                }
+            });
+        });
+
+        // 4. Parallax Images
+        gsap.utils.toArray('.reveal-img').forEach(img => {
+            gsap.to(img, {
+                yPercent: 15,
+                ease: "none",
+                scrollTrigger: {
+                    trigger: img.parentElement,
+                    start: "top bottom",
+                    end: "bottom top",
+                    scrub: true
+                }
+            });
+        });
+
+        // 5. Horizontal Scroll (Process)
+        let processSection = document.getElementById("process");
+        let processWrapper = document.getElementById("process-wrapper");
+        
+        gsap.to(processWrapper, {
+            x: () => -(processWrapper.scrollWidth - window.innerWidth),
+            ease: "none",
+            scrollTrigger: {
+                trigger: processSection,
+                start: "top top",
+                end: () => "+=" + processWrapper.scrollWidth,
+                pin: true,
+                scrub: 1,
+                invalidateOnRefresh: true
+            }
+        });
+
+        // 6. Navbar Transparency
+        const nav = document.querySelector('nav');
+        window.addEventListener('scroll', () => {
+            if(window.scrollY > 50) {
+                nav.classList.add('bg-urban-black/90', 'backdrop-blur-md');
+            } else {
+                nav.classList.remove('bg-urban-black/90', 'backdrop-blur-md');
+            }
+        });
+
+    </script>
+</body>
+</html>
